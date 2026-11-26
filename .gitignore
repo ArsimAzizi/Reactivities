@@ -489,3 +489,6 @@ API/appsettings.json
 API/reactivities.db
 API/reactivities.db-shm
 API/reactivities.db-wal
+
+# FUSE temp files
+.fuse_hidden*

@@ -1,38 +1,72 @@
-import { Grid } from '@mui/material';
+import { Alert, Box, CircularProgress, Grid } from '@mui/material';
 import ActivityList from './ActivityList';
 import ActivityDetails from '../details/ActivityDetails';
 import ActivityForm from '../form/ActivityForm';
 
 type Props = {
     activities: Activity[];
-    selectedActivity: Activity | undefined;
+    isLoading: boolean;
+    error: string | null;
+    selectedActivity?: Activity;
+    editMode: boolean;
     onSelectActivity: (id: string) => void;
-    onCancelSelectActivity?: () => void;
-    openForm?: (id?: string) => void;
-    closeForm?: () => void;
-    editMode?: boolean;
-    submitForm: (activity: Activity) => void;
-    deleteActivity: (id: string) => void;
+    onCancelSelectActivity: () => void;
+    onOpenForm: (id?: string) => void;
+    onCloseForm: () => void;
+    onSubmitForm: (values: ActivityFormValues) => void;
+    onDeleteActivity: (id: string) => void;
 };
 
-export default function ActivityDashboard({ activities, selectedActivity, onSelectActivity, onCancelSelectActivity,
-    openForm, closeForm, editMode, submitForm, deleteActivity
+export default function ActivityDashboard({
+    activities, isLoading, error, selectedActivity, editMode,
+    onSelectActivity, onCancelSelectActivity, onOpenForm, onCloseForm, onSubmitForm, onDeleteActivity
 }: Props) {
+    const renderList = () => {
+        if (isLoading) {
+            return (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress aria-label="Loading activities" />
+                </Box>
+            );
+        }
+        if (error) return <Alert severity="error">{error}</Alert>;
+        if (activities.length === 0) {
+            return <Alert severity="info">No activities yet. Create one to get started!</Alert>;
+        }
+        return (
+            <ActivityList
+                activities={activities}
+                selectedId={selectedActivity?.id}
+                onSelectActivity={onSelectActivity}
+                onDeleteActivity={onDeleteActivity}
+            />
+        );
+    };
+
     return (
         <Grid container spacing={3}>
-            <Grid size={7}>
-                <ActivityList activities={activities}
-                    onSelectActivity={onSelectActivity} 
-                    deleteActivity={deleteActivity}
-                    />
+            <Grid size={{ xs: 12, md: 7 }}>
+                {renderList()}
             </Grid>
-            <Grid size={5}>
-                {selectedActivity && !editMode && (
-                    <ActivityDetails
-                        activities={[selectedActivity]}
-                        onCancelSelectActivity={onCancelSelectActivity} openForm={openForm} />
-                )}
-                {editMode && selectedActivity && <ActivityForm activities={selectedActivity} closeForm={closeForm ?? (() => { })} submitForm={submitForm} />}
+            <Grid size={{ xs: 12, md: 5 }}>
+                {/* Keep the side panel in view while scrolling the list on larger screens */}
+                <Box sx={{ position: { md: 'sticky' }, top: { md: 24 } }}>
+                    {editMode ? (
+                        // key remounts the uncontrolled form so its default values match the current activity
+                        <ActivityForm
+                            key={selectedActivity?.id ?? 'new'}
+                            activity={selectedActivity}
+                            onCancel={onCloseForm}
+                            onSubmit={onSubmitForm}
+                        />
+                    ) : selectedActivity && (
+                        <ActivityDetails
+                            activity={selectedActivity}
+                            onEdit={() => onOpenForm(selectedActivity.id)}
+                            onCancel={onCancelSelectActivity}
+                        />
+                    )}
+                </Box>
             </Grid>
         </Grid>
     )

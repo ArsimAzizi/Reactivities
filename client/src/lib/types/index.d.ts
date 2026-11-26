@@ -10,3 +10,6 @@ type Activity = {
     latitude: number;
     longitude: number;
 };
+
+/** The subset of Activity fields editable through the activity form. */
+type ActivityFormValues = Pick<Activity, 'title' | 'description' | 'category' | 'date' | 'city' | 'venue'>;

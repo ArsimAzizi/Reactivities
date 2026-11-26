@@ -2,31 +2,23 @@ using Domain;
 using MediatR;
 using Persistence;
 
-namespace Application.Activities.Commands
+namespace Application.Activities.Commands;
+
+public class CreateActivity
 {
-    public class CreateActivity
+    public class Command : IRequest<string>
     {
-        public class Command : IRequest<string>
+        public required Activity Activity { get; set; }
+    }
+
+    public class Handler(ApplicationDbContext context) : IRequestHandler<Command, string>
+    {
+        public async Task<string> Handle(Command request, CancellationToken cancellationToken)
         {
-            public required Activity Activity { get; set; }
-        }
+            context.Activities.Add(request.Activity);
+            await context.SaveChangesAsync(cancellationToken);
 
-        public class Handler : IRequestHandler<Command, string>
-        {
-            private readonly ApplicationDbContext context;
-
-            public Handler(ApplicationDbContext context)
-            {
-                this.context = context;
-            }
-
-            public async Task<string> Handle(Command request, CancellationToken cancellationToken)
-            {
-                context.Activities.Add(request.Activity);
-                await context.SaveChangesAsync(cancellationToken);
-
-                return request.Activity.Id;
-            }
+            return request.Activity.Id;
         }
     }
 }
