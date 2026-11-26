@@ -1,46 +1,59 @@
-import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, MenuItem, Paper, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
+import { categoryOptions } from "../../../lib/constants/categories";
+import { toDateTimeLocalValue } from "../../../lib/util/date";
 
 type Props = {
-    activities?: Activity;
-    closeForm: () => void;
-    submitForm: (activity: Activity) => void
+    activity?: Activity;
+    onCancel: () => void;
+    onSubmit: (values: ActivityFormValues) => void;
 };
 
+export default function ActivityForm({ activity, onCancel, onSubmit }: Props) {
+    const isEdit = Boolean(activity);
 
-export default function ActivityForm({ activities, closeForm, submitForm }: Props) {
+    // Keep an existing activity's category selectable even if it isn't one of the presets.
+    const options = activity && !categoryOptions.some(o => o.value === activity.category)
+        ? [...categoryOptions, { value: activity.category, label: activity.category }]
+        : categoryOptions;
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // Handle form submission logic here
         const formData = new FormData(event.currentTarget);
+        const field = (name: keyof ActivityFormValues) => String(formData.get(name) ?? '').trim();
 
-        const data: { [key: string]: FormDataEntryValue } = {}
-        formData.forEach((value, key) => {
-            data[key] = value;
+        onSubmit({
+            title: field('title'),
+            description: field('description'),
+            category: field('category'),
+            date: field('date'),
+            city: field('city'),
+            venue: field('venue'),
         });
-
-        if (activities) {
-            data.id = activities.id;
-        }
-
-        submitForm(data as unknown as Activity);
-    }
+    };
 
     return (
         <Paper sx={{ borderRadius: 3, p: 3 }}>
-            <Typography variant="h5" gutterBottom color="primary">
-                Create Activity
+            <Typography variant="h5" component="h2" gutterBottom color="primary">
+                {isEdit ? 'Edit Activity' : 'Create Activity'}
             </Typography>
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <TextField name="title" label="Title" variant="outlined" fullWidth defaultValue={activities?.title} />
-                <TextField name="description" label="Description" variant="outlined" fullWidth multiline rows={3} defaultValue={activities?.description} />
-                <TextField name="category" label="Category" variant="outlined" fullWidth defaultValue={activities?.category} />
-                <TextField name="date" label="Date" variant="outlined" fullWidth type="date" defaultValue={activities?.date} />
-                <TextField name="city" label="City" variant="outlined" fullWidth defaultValue={activities?.city} />
-                <TextField name="venue" label="Venue" variant="outlined" fullWidth defaultValue={activities?.venue} />
-                <Box sx={{ display: 'flex', justifyContent: 'end', gap: 3 }}>
-                    <Button variant="contained" color="inherit" onClick={closeForm}>
+                <TextField name="title" label="Title" required fullWidth defaultValue={activity?.title} />
+                <TextField name="description" label="Description" required fullWidth multiline rows={3}
+                    defaultValue={activity?.description} />
+                <TextField name="category" label="Category" required fullWidth select
+                    defaultValue={activity?.category ?? ''}>
+                    {options.map(option => (
+                        <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                    ))}
+                </TextField>
+                <TextField name="date" label="Date" required fullWidth type="datetime-local"
+                    defaultValue={toDateTimeLocalValue(activity?.date)}
+                    slotProps={{ inputLabel: { shrink: true } }} />
+                <TextField name="city" label="City" required fullWidth defaultValue={activity?.city} />
+                <TextField name="venue" label="Venue" required fullWidth defaultValue={activity?.venue} />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                    <Button variant="contained" color="inherit" onClick={onCancel}>
                         Cancel
                     </Button>
                     <Button type="submit" variant="contained" color="success">

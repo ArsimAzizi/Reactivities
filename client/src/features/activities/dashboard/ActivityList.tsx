@@ -3,18 +3,22 @@ import ActivityCard from "./ActivityCard";
 
 type Props = {
     activities: Activity[];
+    selectedId?: string;
     onSelectActivity: (id: string) => void;
-    deleteActivity: (id: string) => void;
+    onDeleteActivity: (id: string) => void;
 };
 
-export default function ActivityList({ activities, onSelectActivity, deleteActivity }: Props) {
+export default function ActivityList({ activities, selectedId, onSelectActivity, onDeleteActivity }: Props) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {activities.map((activity) => (
-                <ActivityCard key={activity.id}
+                <ActivityCard
+                    key={activity.id}
                     activity={activity}
-                    onSelectActivity={onSelectActivity}
-                    deleteActivity={deleteActivity} />
+                    isSelected={activity.id === selectedId}
+                    onSelect={onSelectActivity}
+                    onDelete={onDeleteActivity}
+                />
             ))}
         </Box>
     )

@@ -1,33 +1,26 @@
+using Application.Core;
+using Domain;
 using MediatR;
 using Persistence;
 
-namespace Application.Activities.Commands
+namespace Application.Activities.Commands;
+
+public class DeleteActivity
 {
-    public class DeleteActivity
+    public class Command : IRequest
     {
-        public class Command : IRequest
+        public required string Id { get; set; }
+    }
+
+    public class Handler(ApplicationDbContext context) : IRequestHandler<Command>
+    {
+        public async Task Handle(Command request, CancellationToken cancellationToken)
         {
-            public required string Id { get; set; }
-        }
+            var activity = await context.Activities.FindAsync([request.Id], cancellationToken)
+                ?? throw new NotFoundException(nameof(Activity), request.Id);
 
-        public class Handler : IRequestHandler<Command>
-        {
-            private readonly ApplicationDbContext _context;
-
-            public Handler(ApplicationDbContext context)
-            {
-                _context = context;
-            }
-
-            public async Task Handle(Command request, CancellationToken cancellationToken)
-            {
-                var activity = await _context.Activities.FindAsync([request.Id], cancellationToken)
-                    ?? throw new Exception("Activity not found");
-
-                _context.Activities.Remove(activity);
-
-                await _context.SaveChangesAsync(cancellationToken);
-            }
+            context.Activities.Remove(activity);
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }
