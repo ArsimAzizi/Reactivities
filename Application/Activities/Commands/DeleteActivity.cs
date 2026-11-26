@@ -21,16 +21,12 @@ namespace Application.Activities.Commands
 
             public async Task Handle(Command request, CancellationToken cancellationToken)
             {
-                var activity = await _context.Activities.FindAsync([request.Id, cancellationToken])
+                var activity = await _context.Activities.FindAsync([request.Id], cancellationToken)
                     ?? throw new Exception("Activity not found");
+
                 _context.Activities.Remove(activity);
 
                 await _context.SaveChangesAsync(cancellationToken);
-            }
-
-            Task IRequestHandler<Command>.Handle(Command request, CancellationToken cancellationToken)
-            {
-                return Handle(request, cancellationToken);
             }
         }
     }

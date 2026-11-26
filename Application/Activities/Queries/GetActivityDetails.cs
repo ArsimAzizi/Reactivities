@@ -1,7 +1,6 @@
 using Domain;
 using MediatR;
 using Persistence;
-using static Application.Activities.Queries.GetActivityDetails;
 
 namespace Application.Activities.Queries
 {
@@ -11,24 +10,22 @@ namespace Application.Activities.Queries
         {
             public required string Id { get; set; }
         }
-    }
 
-    public class Handler : IRequestHandler<Query, Activity>
-    {
-        private readonly ApplicationDbContext context;
-
-        public Handler(ApplicationDbContext context)
+        public class Handler : IRequestHandler<Query, Activity>
         {
-            this.context = context;
-        }
+            private readonly ApplicationDbContext context;
 
-        public async Task<Activity> Handle(Query request, CancellationToken cancellationToken)
-        {
-            var activity = await context.Activities.FindAsync([request.Id], cancellationToken);
+            public Handler(ApplicationDbContext context)
+            {
+                this.context = context;
+            }
 
-            if (activity == null) throw new Exception("Activity not found");
-
-            return activity;
+            public async Task<Activity> Handle(Query request, CancellationToken cancellationToken)
+            {
+                var activity = await context.Activities.FindAsync([request.Id], cancellationToken)
+                    ?? throw new Exception("Activity not found");
+                return activity;
+            }
         }
     }
 }
